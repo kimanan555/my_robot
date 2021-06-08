@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<launch>
+
+    <param name="robot_description" command="$(find xacro)/xacro $(find description)/urdf/robot.xacro"/>
+
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"/>
+
+    <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher"/>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find description)/rviz/display.rviz"/>
+
+    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop">
+        <remap from="cmd_vel" to="/cmd_vel"/>
+    </node>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find gazebo)/world/simpleroom/model.world"/>
+        <!-- <arg name="debug" value="$(arg_debug)"/>
+        <arg name="gui" value="$(arg_gui)"/>
+        <arg name="paused" value="$(arg_paused)"/>
+        <arg name="use_sim_time" value="$(arg_use_sim_time)"/>
+        <arg name="headless" value="$(arg_world)"/>
+        <remap from="/rhodent/imu" to="/imu"/>
+        <remap from="/rhodent/top_laser/scan" to="/laser_scan"/> -->
+    </include>
+
+    <node 
+        name="urdf_spawner" 
+        pkg="gazebo_ros" 
+        type="spawn_model" 
+        respawn="false" 
+        output="screen"
+        args="-urdf -model my_robot -param robot_description"/>
+
+    <rosparam file="$(find gazebo)/config/controller_config.yaml" command="load"/>
+
+    <node 
+        name="controller_spawner"
+        pkg="controller_manager"
+        type="spawner"
+        respawn="false"
+        output="screen"
+        ns="/my_robot"
+        args="joint_controller
+        left_wheel_velocity_controller
+        right_wheel_velocity_controller"/>
+
+</launch>
